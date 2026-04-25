@@ -1,0 +1,8 @@
+{
+  "name": "temanuizukan-generator",
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "npx serve . -p 3000",
+    "build": "echo 'Static site - no build needed'"
+  }
+}
