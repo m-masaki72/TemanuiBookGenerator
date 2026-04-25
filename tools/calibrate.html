@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>Temunui Calibration Tool</title>
+<style>
+  body { margin: 0; background: #222; color: #fff; font-family: monospace; display: flex; gap: 16px; padding: 16px; }
+  #canvas-wrap { position: relative; flex-shrink: 0; }
+  canvas { display: block; cursor: crosshair; }
+  #panel { width: 360px; }
+  h2 { margin: 0 0 12px; font-size: 1rem; color: #0f0; }
+  .slot-entry { margin-bottom: 10px; padding: 8px; background: #333; border-radius: 6px; }
+  .slot-entry.active { background: #445; border: 1px solid #88f; }
+  .slot-entry.done { background: #354; border: 1px solid #4f4; }
+  .slot-title { font-size:.8rem; color: #aaa; margin-bottom:4px; }
+  .coords { font-size:.75rem; color:#ff8; }
+  #info { background:#333; padding:10px; border-radius:6px; margin-bottom:12px; font-size:.8rem; line-height:1.6; }
+  #output { background:#111; padding:10px; border-radius:6px; font-size:.7rem; white-space:pre; overflow-x:auto; margin-top:12px; }
+  #pos { font-size:.75rem; color:#aaa; margin-top:8px; }
+  button { background:#446; color:#fff; border:none; padding:6px 12px; border-radius:4px; cursor:pointer; margin-top:8px; font-family:monospace; }
+  button:hover { background:#558; }
+</style>
+</head>
+<body>
+<div id="canvas-wrap">
+  <canvas id="c"></canvas>
+</div>
+<div id="panel">
+  <h2>Temunui Calibration Tool</h2>
+  <div id="info">
+    <b>使い方：</b><br>
+    各エリアの <span style="color:#f88">左上</span> → <span style="color:#8f8">右下</span> の順にクリック<br>
+    4エリア × 2クリック = 合計8クリック<br><br>
+    <b>注意：</b>テキストエリアはラベルタブの<br>
+    <span style="color:#ff8">下端</span>から測定してください
+  </div>
+  <div id="slot-list"></div>
+  <div id="pos">マウス位置: -</div>
+  <button onclick="resetAll()">リセット</button>
+  <div id="output"></div>
+</div>
+
+<script>
+const LABELS = [
+  '📷 写真パネル（クリームエリア全体）',
+  '🌙 出会った時期（テキスト入力域）',
+  '🦔 特　徴（テキスト入力域）',
+  '🎤 アピールポイント（テキスト入力域）',
+];
+const KEYS = ['photo', 'encounter', 'feature', 'appeal'];
+const slots = Array(4).fill(null).map(() => ({ tl: null, br: null }));
+let clickState = 0;
+let imgNW, imgNH, scale;
+
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
+const slotList = document.getElementById('slot-list');
+const posEl = document.getElementById('pos');
+const outputEl = document.getElementById('output');
+
+LABELS.forEach((lbl, i) => {
+  const div = document.createElement('div');
+  div.className = 'slot-entry' + (i === 0 ? ' active' : '');
+  div.id = `slot-${i}`;
+  div.innerHTML = `<div class="slot-title">${lbl}</div><div class="coords" id="coords-${i}">未測定</div>`;
+  slotList.appendChild(div);
+});
+
+const img = new Image();
+img.onload = () => {
+  imgNW = img.naturalWidth;
+  imgNH = img.naturalHeight;
+  const maxH = window.innerHeight - 32;
+  scale = Math.min(maxH / imgNH, (window.innerWidth - 420) / imgNW);
+  canvas.width = Math.round(imgNW * scale);
+  canvas.height = Math.round(imgNH * scale);
+  redraw();
+};
+img.src = '../template.jpg';
+
+const COLORS = ['#f88', '#8ff', '#ff8', '#f8f'];
+
+function redraw() {
+  ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+  slots.forEach((s, i) => {
+    if (!s.tl) return;
+    const x1 = s.tl.x * scale, y1 = s.tl.y * scale;
+    ctx.fillStyle = COLORS[i] + '30';
+    ctx.strokeStyle = COLORS[i];
+    ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(x1, y1, 5, 0, Math.PI*2); ctx.stroke();
+    if (!s.br) return;
+    const x2 = s.br.x * scale, y2 = s.br.y * scale;
+    ctx.strokeRect(x1, y1, x2-x1, y2-y1);
+    ctx.fillRect(x1, y1, x2-x1, y2-y1);
+    ctx.fillStyle = COLORS[i];
+    ctx.font = `bold ${Math.round(13/scale)}px monospace`;
+    ctx.fillText(KEYS[i], x1 + 4, y1 + Math.round(16/scale));
+  });
+
+  if (clickState < 8) {
+    const si = Math.floor(clickState / 2);
+    const corner = clickState % 2 === 0 ? '左上をクリック ↖' : '右下をクリック ↘';
+    ctx.fillStyle = 'rgba(0,0,0,0.7)';
+    ctx.fillRect(0, 0, canvas.width, 28);
+    ctx.fillStyle = COLORS[si];
+    ctx.font = '13px monospace';
+    ctx.fillText(`[${si+1}] ${LABELS[si].replace(/^.+ /, '')} — ${corner}`, 8, 18);
+  } else {
+    ctx.fillStyle = 'rgba(0,80,0,0.8)';
+    ctx.fillRect(0, 0, canvas.width, 28);
+    ctx.fillStyle = '#0f0';
+    ctx.font = '13px monospace';
+    ctx.fillText('✓ 完了！右のコードをapp.jsにコピーしてください', 8, 18);
+  }
+}
+
+canvas.addEventListener('mousemove', (e) => {
+  const r = canvas.getBoundingClientRect();
+  posEl.textContent = `マウス位置: x=${Math.round((e.clientX - r.left) / scale)}, y=${Math.round((e.clientY - r.top) / scale)}`;
+});
+
+canvas.addEventListener('click', (e) => {
+  if (clickState >= 8) return;
+  const r = canvas.getBoundingClientRect();
+  const px = Math.round((e.clientX - r.left) / scale);
+  const py = Math.round((e.clientY - r.top) / scale);
+  const si = Math.floor(clickState / 2);
+  if (clickState % 2 === 0) {
+    slots[si].tl = { x: px, y: py };
+  } else {
+    slots[si].br = { x: px, y: py };
+    updateSlotUI(si);
+    updateOutput();
+  }
+  clickState++;
+  document.querySelectorAll('.slot-entry').forEach((el, i) => {
+    el.className = 'slot-entry' + (i === Math.floor(clickState/2) && clickState < 8 ? ' active' : (slots[i].br ? ' done' : ''));
+  });
+  redraw();
+});
+
+function updateSlotUI(i) {
+  const s = slots[i];
+  if (!s.tl || !s.br) return;
+  document.getElementById(`coords-${i}`).textContent =
+    `x:${s.tl.x}, y:${s.tl.y}, w:${s.br.x - s.tl.x}, h:${s.br.y - s.tl.y}`;
+}
+
+function updateOutput() {
+  const [photo, enc, feat, app] = slots;
+  const lines = [];
+
+  if (photo.tl && photo.br) {
+    lines.push(`// ===== app.js に貼り付け =====`);
+    lines.push(`const PHOTO = {`);
+    lines.push(`  x: ${photo.tl.x}, y: ${photo.tl.y},`);
+    lines.push(`  w: ${photo.br.x - photo.tl.x}, h: ${photo.br.y - photo.tl.y},`);
+    lines.push(`};`);
+  }
+
+  const panels = [
+    { key: 'encounter', s: enc },
+    { key: 'feature',   s: feat },
+    { key: 'appeal',    s: app },
+  ];
+
+  const allPanels = panels.every(p => p.s.tl && p.s.br);
+  if (allPanels) {
+    lines.push(`const PANELS = [`);
+    panels.forEach(({ key, s }) => {
+      const x = s.tl.x, y = s.tl.y, w = s.br.x - s.tl.x, h = s.br.y - s.tl.y;
+      lines.push(`  { key: '${key}', x: ${x}, y: ${y}, w: ${w}, h: ${h} },`);
+    });
+    lines.push(`];`);
+  }
+
+  outputEl.textContent = lines.join('\n');
+}
+
+function resetAll() {
+  slots.forEach(s => { s.tl = null; s.br = null; });
+  clickState = 0;
+  document.querySelectorAll('.slot-entry').forEach((el, i) => {
+    el.className = 'slot-entry' + (i === 0 ? ' active' : '');
+    document.getElementById(`coords-${i}`).textContent = '未測定';
+  });
+  outputEl.textContent = '';
+  redraw();
+}
+</script>
+</body>
+</html>
