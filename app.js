@@ -215,11 +215,12 @@ async function processBackgroundRemoval(file) {
   progressFill.style.width = '0%';
   _bgRemovalInFlight++;
 
+  let succeeded = false;
   try {
     const mod = await loadBgRemover();
     if (!mod) {
       if (state.photo.original === file) fallbackToOriginal(file);
-      return;
+      return false;
     }
     const blob = await mod.removeBackground(file, {
       model: 'isnet_fp16',
@@ -232,6 +233,7 @@ async function processBackgroundRemoval(file) {
       state.photo.processed = blob;
       state.photo.objectUrl = URL.createObjectURL(blob);
       updatePhotoUI();
+      succeeded = true;
     }
   } catch {
     if (state.photo.original === file) {
@@ -242,6 +244,7 @@ async function processBackgroundRemoval(file) {
     _bgRemovalInFlight--;
     if (_bgRemovalInFlight === 0) progressBar.classList.remove('active');
   }
+  return succeeded;
 }
 
 function fallbackToOriginal(file) {
@@ -257,8 +260,8 @@ async function handleFileSelect(file) {
   state.photo.original = file;
   state.photo.transform = { scale: 100, x: 0, y: 0 };
   if (state.bgRemoveEnabled) {
-    await processBackgroundRemoval(file);
-    showToast('切り抜き完了！');
+    const ok = await processBackgroundRemoval(file);
+    if (ok) showToast('切り抜き完了！');
   } else {
     state.photo.processed = file;
     state.photo.objectUrl = URL.createObjectURL(file);
@@ -324,7 +327,6 @@ bgRemoveToggle.addEventListener('change', async () => {
 });
 
 // ===== Editor (Step 2) =====
-let _editorImgCache = { src: null, img: null };
 let dragStart = null;
 
 function initEditorUI() {
@@ -347,7 +349,7 @@ function renderEditorCanvas() {
   const nh = Math.round(h * dpr);
   if (canvas.width !== nw || canvas.height !== nh) { canvas.width = nw; canvas.height = nh; }
 
-  const drawFrame = img => {
+  loadImg(state.photo.objectUrl).then(img => {
     ctx.save();
     ctx.scale(dpr, dpr);
     ctx.clearRect(0, 0, w, h);
@@ -363,15 +365,7 @@ function renderEditorCanvas() {
     ctx.drawImage(img, dx, dy, drawW, drawH);
     drawCropFrame(ctx, w, h);
     ctx.restore();
-  };
-
-  if (_editorImgCache.src === state.photo.objectUrl && _editorImgCache.img) {
-    drawFrame(_editorImgCache.img);
-  } else {
-    const img = new Image();
-    img.onload = () => { _editorImgCache = { src: state.photo.objectUrl, img }; drawFrame(img); };
-    img.src = state.photo.objectUrl;
-  }
+  }).catch(() => {});
 }
 
 function drawCropFrame(ctx, w, h) {
