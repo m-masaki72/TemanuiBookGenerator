@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>てまぬい図鑑ジェネレーター</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Stick&family=Zen+Maru+Gothic:wght@400;700;900&family=Hachi+Maru+Pop&family=Klee+One&family=Noto+Sans+JP:wght@400;700&family=M+PLUS+Rounded+1c:wght@400;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1>てまぬい図鑑<span>ジェネレーター</span></h1>
+    <p class="subtitle">大切な人形の紹介カードを作ろう 🧸</p>
+  </header>
+
+  <div class="steps">
+    <div class="step-dot active"></div>
+    <div class="step-dot"></div>
+    <div class="step-dot"></div>
+    <div class="step-dot"></div>
+  </div>
+
+  <!-- Step 1: Upload -->
+  <div class="section" id="step-upload">
+    <div class="section-title"><span class="num">1</span>写真をアップロード</div>
+
+    <div class="toggle-row">
+      <div>
+        <div class="toggle-label">背景を自動で切り抜く</div>
+        <div class="toggle-hint">人形の背景をきれいに消します（AI処理・少し時間がかかります）</div>
+      </div>
+      <label class="switch">
+        <input type="checkbox" id="bg-remove-toggle">
+        <span class="slider"></span>
+      </label>
+    </div>
+
+    <div class="upload-area">
+      <div class="upload-slot" id="upload-slot">
+        <div class="placeholder">
+          <span class="upload-icon">🧸</span>
+          <span>タップして写真を追加</span>
+        </div>
+        <button class="remove-btn" title="削除">✕</button>
+        <input type="file" accept="image/*" id="file-input">
+      </div>
+    </div>
+
+    <div class="progress-bar" id="bg-progress">
+      <div class="fill" id="bg-progress-fill"></div>
+    </div>
+
+    <div class="controls-row" style="justify-content:flex-end;margin-top:20px">
+      <button class="btn btn-primary" id="btn-to-crop" disabled>次へ：写真を調整 →</button>
+    </div>
+  </div>
+
+  <!-- Step 2: Photo crop/position -->
+  <div class="section hidden" id="step-crop">
+    <div class="section-title"><span class="num">2</span>写真の位置・サイズを調整</div>
+
+    <div class="editor-canvas-wrap" id="editor-canvas-wrap">
+      <canvas id="editor-canvas"></canvas>
+    </div>
+
+    <div class="editor-controls">
+      <div class="slider-group">
+        <label>拡大率</label>
+        <input type="range" id="edit-scale" min="50" max="300" value="100" step="1">
+        <span id="edit-scale-val" style="font-size:.8rem;min-width:40px;text-align:right">100%</span>
+      </div>
+      <div class="slider-group">
+        <label>左右</label>
+        <input type="range" id="edit-x" min="-300" max="300" value="0" step="1">
+      </div>
+      <div class="slider-group">
+        <label>上下</label>
+        <input type="range" id="edit-y" min="-300" max="300" value="0" step="1">
+      </div>
+    </div>
+
+    <div class="controls-row" style="justify-content:space-between;margin-top:20px">
+      <button class="btn btn-secondary" id="btn-back-upload">↩ 戻る</button>
+      <button class="btn btn-primary" id="btn-to-edit">次へ：文字を入力 →</button>
+    </div>
+  </div>
+
+  <!-- Step 3: Text + Preview -->
+  <div class="section hidden" id="step-edit">
+    <div class="section-title"><span class="num">3</span>内容を入力</div>
+
+    <div class="preview-area" id="preview-area">
+      <canvas id="preview-canvas" style="display:block;width:100%;border-radius:8px"></canvas>
+    </div>
+
+    <div class="font-selector-row">
+      <span class="font-selector-label">フォント</span>
+      <div class="font-chips" id="font-chips"></div>
+    </div>
+
+    <div class="text-grid">
+      <div class="text-group">
+        <label class="text-label"><span class="chip teal">🌙 出会った時期</span></label>
+        <textarea id="text-encounter" class="text-input" placeholder="例：2024年春、X（Twitter）のイベントで出会いました。" rows="3"></textarea>
+      </div>
+      <div class="text-group">
+        <label class="text-label"><span class="chip teal">🦔 特　徴</span></label>
+        <textarea id="text-feature" class="text-input" placeholder="例：ふわふわの毛並み、つぶらな瞳、ちょこんと座る姿..." rows="4"></textarea>
+      </div>
+      <div class="text-group">
+        <label class="text-label"><span class="chip teal">🎤 アピールポイント</span></label>
+        <textarea id="text-appeal" class="text-input" placeholder="例：どんな角度から見てもかわいい！ずっと一緒にいたい！" rows="3"></textarea>
+      </div>
+    </div>
+
+    <div class="controls-row" style="justify-content:space-between;margin-top:20px">
+      <button class="btn btn-secondary" id="btn-back-crop">↩ 戻る</button>
+      <button class="btn btn-primary btn-lg" id="btn-generate">🎉 図鑑カードを生成</button>
+    </div>
+  </div>
+
+  <!-- Step 4: Result -->
+  <div class="section hidden" id="step-result">
+    <div class="section-title"><span class="num">4</span>完成！</div>
+    <div class="result-area">
+      <canvas id="result-canvas"></canvas>
+    </div>
+    <div class="result-actions">
+      <button class="btn btn-primary btn-lg" id="btn-download">📥 ダウンロード</button>
+      <button class="btn btn-secondary" id="btn-restart">🔄 もう一度作る</button>
+    </div>
+  </div>
+
+  <footer>
+    <p>Made with ❤️ for your beloved dolls</p>
+    <div class="license-section">
+      <details>
+        <summary>ライセンス・利用許諾</summary>
+        <div class="license-detail">
+          <p><strong>背景切り抜き機能</strong><br>
+          <a href="https://img.ly" target="_blank" rel="noopener">IMG.LY GmbH</a> 提供の
+          <a href="https://github.com/imgly/background-removal-js" target="_blank" rel="noopener">background-removal</a><br>
+          ライセンス: <a href="https://www.gnu.org/licenses/agpl-3.0.html" target="_blank" rel="noopener">AGPL-3.0</a></p>
+          <p style="margin-bottom:0"><strong>フォント</strong><br>
+          <a href="https://fonts.google.com/specimen/Stick" target="_blank" rel="noopener">Stick</a> /
+          <a href="https://fonts.google.com/specimen/Zen+Maru+Gothic" target="_blank" rel="noopener">Zen Maru Gothic</a> /
+          <a href="https://fonts.google.com/specimen/Hachi+Maru+Pop" target="_blank" rel="noopener">Hachi Maru Pop</a> /
+          <a href="https://fonts.google.com/specimen/Klee+One" target="_blank" rel="noopener">Klee One</a> /
+          <a href="https://fonts.google.com/specimen/Noto+Sans+JP" target="_blank" rel="noopener">Noto Sans JP</a><br>
+          ライセンス: SIL Open Font License 1.1</p>
+        </div>
+      </details>
+    </div>
+  </footer>
+</div>
+
+<div class="toast" id="toast"></div>
+<script type="module" src="app.js"></script>
+</body>
+</html>
