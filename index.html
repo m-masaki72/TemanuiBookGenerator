@@ -4,15 +4,17 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>てまぬい図鑑ジェネレーター</title>
+<link rel="icon" href="icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Stick&family=Zen+Maru+Gothic:wght@400;700;900&family=Hachi+Maru+Pop&family=Klee+One&family=Noto+Sans+JP:wght@400;700&family=M+PLUS+Rounded+1c:wght@400;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Stick&family=Zen+Maru+Gothic:wght@400;700;900&family=Hachi+Maru+Pop&family=Klee+One&family=Noto+Sans+JP:wght@400;700&family=M+PLUS+Rounded+1c:wght@400;700;800&family=Reggae+One&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
 <div class="container">
   <header>
+    <img src="icon.png" class="header-icon" alt="">
     <h1>てまぬい図鑑<span>ジェネレーター</span></h1>
-    <p class="subtitle">大切な人形の紹介カードを作ろう 🧸</p>
+    <p class="subtitle">あなたのてまぬいを教えて？</p>
   </header>
 
   <div class="steps">
@@ -29,7 +31,7 @@
     <div class="toggle-row">
       <div>
         <div class="toggle-label">背景を自動で切り抜く</div>
-        <div class="toggle-hint">人形の背景をきれいに消します（AI処理・少し時間がかかります）</div>
+        <div class="toggle-hint">てまぬいの背景をきれいに消します（AI処理・少し時間がかかります）</div>
       </div>
       <label class="switch">
         <input type="checkbox" id="bg-remove-toggle">
@@ -40,7 +42,7 @@
     <div class="upload-area">
       <div class="upload-slot" id="upload-slot">
         <div class="placeholder">
-          <span class="upload-icon">🧸</span>
+          <img src="icon.png" class="upload-icon" alt="">
           <span>タップして写真を追加</span>
         </div>
         <button class="remove-btn" title="削除">✕</button>
@@ -68,7 +70,7 @@
     <div class="editor-controls">
       <div class="slider-group">
         <label>拡大率</label>
-        <input type="range" id="edit-scale" min="50" max="300" value="100" step="1">
+        <input type="range" id="edit-scale" min="25" max="300" value="100" step="1">
         <span id="edit-scale-val" style="font-size:.8rem;min-width:40px;text-align:right">100%</span>
       </div>
       <div class="slider-group">
@@ -129,6 +131,7 @@
     </div>
     <div class="result-actions">
       <button class="btn btn-primary btn-lg" id="btn-download">📥 ダウンロード</button>
+      <button class="btn btn-twitter" id="btn-share">𝕏 シェアする</button>
       <button class="btn btn-secondary" id="btn-restart">🔄 もう一度作る</button>
     </div>
   </div>

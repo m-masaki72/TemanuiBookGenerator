@@ -26,6 +26,9 @@ const FONT_OPTIONS = [
   { id: 'hachi',  label: 'ぽわぽわ',  css: '"Hachi Maru Pop", cursive' },
   { id: 'klee',   label: 'てがき',    css: '"Klee One", cursive' },
   { id: 'noto',   label: 'すっきり',  css: '"Noto Sans JP", sans-serif' },
+  { id: 'mplus',  label: 'ふんわり',  css: '"M PLUS Rounded 1c", sans-serif' },
+  { id: 'stick',  label: 'レトロ',    css: '"Stick", sans-serif' },
+  { id: 'reggae', label: 'ポップ',    css: '"Reggae One", cursive' },
 ];
 
 // ===== State =====
@@ -43,6 +46,24 @@ const state = {
 };
 
 let _bgRemovalInFlight = 0;
+let _wanderTimer = null;
+
+function startWander(icon) {
+  const ICON = 72;
+  function move() {
+    const w = uploadSlot.clientWidth - ICON;
+    const h = uploadSlot.clientHeight - ICON;
+    icon.style.left = Math.random() * w + 'px';
+    icon.style.top  = Math.random() * h + 'px';
+  }
+  move();
+  _wanderTimer = setInterval(move, 4000);
+}
+
+function stopWander() {
+  clearInterval(_wanderTimer);
+  _wanderTimer = null;
+}
 
 // ===== DOM refs =====
 const $ = sel => document.querySelector(sel);
@@ -54,6 +75,7 @@ const btnBackUpload  = $('#btn-back-upload');
 const btnBackCrop    = $('#btn-back-crop');
 const btnGenerate    = $('#btn-generate');
 const btnDownload    = $('#btn-download');
+const btnShare       = $('#btn-share');
 const btnRestart     = $('#btn-restart');
 const bgRemoveToggle = $('#bg-remove-toggle');
 const editorWrap     = $('#editor-canvas-wrap');
@@ -80,7 +102,7 @@ function loadImg(url) {
 }
 
 // Preload template
-loadImg('./template.jpg').catch(() => {});
+loadImg('./template.png').catch(() => {});
 
 // ===== Canvas helpers =====
 function calcLines(ctx, text, maxWidth) {
@@ -109,7 +131,7 @@ async function drawTemplate(ctx, scale) {
 
   // Draw template image as base
   try {
-    const tmpl = await loadImg('./template.jpg');
+    const tmpl = await loadImg('./template.png');
     ctx.drawImage(tmpl, 0, 0, s(CANVAS_W), s(CANVAS_H));
   } catch {
     ctx.fillStyle = '#4AADAD';
@@ -165,6 +187,8 @@ function drawPhotoSlot(ctx, scale) {
     ctx.beginPath();
     ctx.rect(s(PHOTO.x), s(PHOTO.y), s(PHOTO.w), s(PHOTO.h));
     ctx.clip();
+    ctx.fillStyle = '#ffffe7';
+    ctx.fillRect(s(PHOTO.x), s(PHOTO.y), s(PHOTO.w), s(PHOTO.h));
     const t = state.photo.transform;
     const imgScale = t.scale / 100;
     const sw = s(PHOTO.w), sh = s(PHOTO.h);
@@ -210,8 +234,10 @@ async function loadBgRemover() {
 async function processBackgroundRemoval(file) {
   uploadSlot.classList.add('has-image');
   uploadSlot.querySelector('.placeholder').innerHTML =
-    '<span class="spinner"></span><br><span style="font-size:.75rem">切り抜き中...</span>';
+    '<img src="icon.png" class="wandering-icon" alt=""><span class="removing-label">切り抜き中...</span>';
   uploadSlot.querySelector('.placeholder').style.display = '';
+  uploadSlot.classList.add('is-removing');
+  startWander(uploadSlot.querySelector('.wandering-icon'));
   progressBar.classList.add('active');
   progressFill.style.width = '0%';
   _bgRemovalInFlight++;
@@ -220,7 +246,7 @@ async function processBackgroundRemoval(file) {
   try {
     const mod = await loadBgRemover();
     if (!mod) {
-      if (state.photo.original === file) fallbackToOriginal(file);
+      if (state.photo.original === file && state.bgRemoveEnabled) fallbackToOriginal(file);
       return false;
     }
     const blob = await mod.removeBackground(file, {
@@ -229,7 +255,7 @@ async function processBackgroundRemoval(file) {
         if (total > 0) progressFill.style.width = Math.round((current / total) * 100) + '%';
       },
     });
-    if (state.photo.original === file) {
+    if (state.photo.original === file && state.bgRemoveEnabled) {
       revokeSlotUrl(state.photo.objectUrl);
       state.photo.processed = blob;
       state.photo.objectUrl = URL.createObjectURL(blob);
@@ -237,18 +263,23 @@ async function processBackgroundRemoval(file) {
       succeeded = true;
     }
   } catch {
-    if (state.photo.original === file) {
+    if (state.photo.original === file && state.bgRemoveEnabled) {
       fallbackToOriginal(file);
       showToast('⚠️ 切り抜きできなかったので元の画像を使います');
     }
   } finally {
     _bgRemovalInFlight--;
-    if (_bgRemovalInFlight === 0) progressBar.classList.remove('active');
+    if (_bgRemovalInFlight === 0) {
+      progressBar.classList.remove('active');
+      uploadSlot.classList.remove('is-removing');
+      stopWander();
+    }
   }
   return succeeded;
 }
 
 function fallbackToOriginal(file) {
+  revokeSlotUrl(state.photo.objectUrl);
   state.photo.processed = file;
   state.photo.objectUrl = URL.createObjectURL(file);
   updatePhotoUI();
@@ -273,6 +304,9 @@ async function handleFileSelect(file) {
 }
 
 function removePhoto() {
+  stopWander();
+  uploadSlot.classList.remove('is-removing');
+  progressBar.classList.remove('active');
   revokeSlotUrl(state.photo.objectUrl);
   state.photo.original = null;
   state.photo.processed = null;
@@ -283,7 +317,7 @@ function removePhoto() {
 }
 
 function updatePhotoUI() {
-  const existing = uploadSlot.querySelector('img');
+  const existing = uploadSlot.querySelector(':scope > img');
   if (existing) existing.remove();
   if (state.photo.objectUrl) {
     uploadSlot.classList.add('has-image');
@@ -295,7 +329,7 @@ function updatePhotoUI() {
     uploadSlot.classList.remove('has-image');
     uploadSlot.querySelector('.placeholder').style.display = '';
     uploadSlot.querySelector('.placeholder').innerHTML =
-      '<span class="upload-icon">🧸</span><span>タップして写真を追加</span>';
+      '<img src="icon.png" class="upload-icon" alt=""><span>タップして写真を追加</span>';
   }
 }
 
@@ -317,7 +351,7 @@ uploadSlot.querySelector('.remove-btn').addEventListener('click', e => {
 // BG remove toggle
 bgRemoveToggle.addEventListener('change', async () => {
   state.bgRemoveEnabled = bgRemoveToggle.checked;
-  if (state.bgRemoveEnabled && state.photo.original && state.photo.processed === state.photo.original) {
+  if (state.bgRemoveEnabled && state.photo.original && state.photo.processed === state.photo.original && _bgRemovalInFlight === 0) {
     await processBackgroundRemoval(state.photo.original);
   } else if (!state.bgRemoveEnabled && state.photo.original && state.photo.processed !== state.photo.original) {
     revokeSlotUrl(state.photo.objectUrl);
@@ -542,6 +576,12 @@ btnDownload.addEventListener('click', () => {
     URL.revokeObjectURL(url);
     showToast('ダウンロードしました！ 📥');
   }, 'image/png');
+});
+
+btnShare.addEventListener('click', () => {
+  const text = '#てまぬい図鑑 #初星学園ぬいぬい部';
+  const url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`;
+  window.open(url, '_blank', 'noopener,noreferrer');
 });
 
 // ===== Resize =====
