@@ -374,6 +374,26 @@ footer{
 footer a{color:var(--teal);text-decoration:none}
 footer a:hover{text-decoration:underline}
 
+.tweet-embed{
+  display:flex;justify-content:center;
+  margin-bottom:16px;
+}
+.tweet-embed .twitter-tweet{margin:0 auto}
+/* Fallback style when Twitter widget JS fails to load */
+.tweet-embed blockquote.twitter-tweet:not(.twitter-tweet-rendered){
+  max-width:500px;width:100%;
+  background:var(--card);border:1px solid var(--border-solid);
+  border-radius:12px;padding:16px 20px;
+  font-size:.85rem;line-height:1.7;color:var(--text);
+  text-align:left;
+}
+.tweet-embed blockquote.twitter-tweet:not(.twitter-tweet-rendered) a{
+  color:var(--teal);text-decoration:none;
+}
+.tweet-embed blockquote.twitter-tweet:not(.twitter-tweet-rendered) a:hover{
+  text-decoration:underline;
+}
+
 .license-section{
   margin-top:12px;padding-top:12px;
   border-top:1px solid var(--border-solid);
