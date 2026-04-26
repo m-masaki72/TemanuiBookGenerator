@@ -123,14 +123,14 @@ async function drawTemplate(ctx, scale) {
 
   // Draw text for each panel (auto font size + vertically centered)
   const fontCss = FONT_OPTIONS.find(f => f.id === state.font)?.css ?? '"Zen Maru Gothic", sans-serif';
-  const padX = s(20);
   ctx.fillStyle = '#333333';
-  ctx.textAlign = 'left';
+  ctx.textAlign = 'center';
   ctx.textBaseline = 'top';
 
   for (const panel of PANELS) {
     const text = state.texts[panel.key];
     if (!text || !text.trim()) continue;
+    const padX = s(20);
     const maxW = s(panel.w) - padX * 2;
     const maxH = s(panel.h);
 
@@ -150,8 +150,9 @@ async function drawTemplate(ctx, scale) {
     const lines = calcLines(ctx, text, maxW);
     const totalH = lines.length * lineH;
     const startY = s(panel.y) + (maxH - totalH) / 2;
+    const centerX = s(panel.x) + s(panel.w) / 2;
     lines.forEach((line, i) => {
-      ctx.fillText(line, s(panel.x) + padX, startY + i * lineH);
+      ctx.fillText(line, centerX, startY + i * lineH);
     });
   }
 }
