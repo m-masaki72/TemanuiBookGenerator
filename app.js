@@ -589,15 +589,24 @@ $('#btn-agree-terms').addEventListener('click', () => {
   if (_termsResolve) { _termsResolve(true); _termsResolve = null; }
 });
 
-$('#btn-cancel-terms').addEventListener('click', () => {
+function cancelTermsModal() {
   $('#terms-modal').classList.add('hidden');
   if (_termsResolve) { _termsResolve(false); _termsResolve = null; }
+}
+
+$('#btn-cancel-terms').addEventListener('click', cancelTermsModal);
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && !$('#terms-modal').classList.contains('hidden')) {
+    cancelTermsModal();
+  }
 });
 
 $('#terms-detail-link').addEventListener('click', e => {
   e.preventDefault();
-  document.querySelector('.license-section details')?.setAttribute('open', '');
-  document.querySelector('.license-section')?.scrollIntoView({ behavior: 'smooth' });
+  const section = $('#terms-rules-section');
+  section?.querySelector('details')?.setAttribute('open', '');
+  section?.scrollIntoView({ behavior: 'smooth' });
 });
 
 // ===== Navigation =====
