@@ -41,6 +41,9 @@ const state = {
   },
   texts: { encounter: '', feature: '', appeal: '' },
   font: 'zen',
+  fontBold: true,
+  fontSizePreset: 'medium',
+  textColor: '#333333',
   bgRemoveEnabled: false,
   bgRemover: null,
 };
@@ -145,9 +148,10 @@ async function drawTemplate(ctx, scale) {
 
   // Draw text for each panel (auto font size + vertically centered)
   const fontCss = FONT_OPTIONS.find(f => f.id === state.font)?.css ?? '"Zen Maru Gothic", sans-serif';
-  ctx.fillStyle = '#333333';
+  ctx.fillStyle = state.textColor;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'top';
+  const fontWeight = state.fontBold ? 'bold' : '';
 
   for (const panel of PANELS) {
     const text = state.texts[panel.key];
@@ -157,17 +161,18 @@ async function drawTemplate(ctx, scale) {
     const maxH = s(panel.h);
 
     // Binary search for largest font size that fits within panel height
-    let lo = s(11), hi = s(26), bestSize = lo;
+    const sizeHi = { small: s(22), medium: s(40), large: s(60) };
+    let lo = s(11), hi = sizeHi[state.fontSizePreset] ?? s(40), bestSize = lo;
     while (lo <= hi) {
       const mid = Math.floor((lo + hi) / 2);
-      ctx.font = `${mid}px ${fontCss}`;
+      ctx.font = `${fontWeight} ${mid}px ${fontCss}`.trim();
       const lineH = mid * 1.55;
       const lines = calcLines(ctx, text, maxW);
       if (lines.length * lineH <= maxH) { bestSize = mid; lo = mid + 1; }
       else { hi = mid - 1; }
     }
 
-    ctx.font = `${bestSize}px ${fontCss}`;
+    ctx.font = `${fontWeight} ${bestSize}px ${fontCss}`.trim();
     const lineH = bestSize * 1.55;
     const lines = calcLines(ctx, text, maxW);
     const totalH = lines.length * lineH;
@@ -177,6 +182,16 @@ async function drawTemplate(ctx, scale) {
       ctx.fillText(line, centerX, startY + i * lineH);
     });
   }
+
+  // Invisible watermark (opacity too low to perceive but embedded in pixel data)
+  ctx.save();
+  ctx.globalAlpha = 0.04;
+  ctx.fillStyle = '#000000';
+  ctx.font = `bold ${s(11)}px sans-serif`;
+  ctx.textAlign = 'right';
+  ctx.textBaseline = 'top';
+  ctx.fillText('temanuibookgenerator.pages.dev', s(CANVAS_W) - s(12), s(12));
+  ctx.restore();
 }
 
 function drawPhotoSlot(ctx, scale) {
@@ -497,6 +512,54 @@ $('#edit-y').addEventListener('input', e => {
   });
 })();
 
+// ===== Bold toggle =====
+(function initBoldToggle() {
+  const btn = document.getElementById('bold-toggle');
+  if (!btn) return;
+  btn.classList.toggle('active', state.fontBold);
+  btn.addEventListener('click', () => {
+    state.fontBold = !state.fontBold;
+    btn.classList.toggle('active', state.fontBold);
+    renderPreview();
+  });
+})();
+
+// ===== Font size preset =====
+(function initFontSizePreset() {
+  const btns = document.querySelectorAll('.size-preset-btn');
+  if (!btns.length) return;
+  btns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      state.fontSizePreset = btn.dataset.size;
+      btns.forEach(b => b.classList.toggle('active', b.dataset.size === state.fontSizePreset));
+      renderPreview();
+    });
+  });
+})();
+
+// ===== Text color selector =====
+(function initColorSelector() {
+  const swatches = document.querySelectorAll('.color-swatch');
+  const picker = document.getElementById('text-color-picker');
+  if (!swatches.length || !picker) return;
+
+  function setColor(color) {
+    state.textColor = color;
+    swatches.forEach(s => s.classList.toggle('active', s.dataset.color === color));
+    if (picker.value !== color) picker.value = color;
+    renderPreview();
+  }
+
+  swatches.forEach(s => {
+    s.addEventListener('click', () => setColor(s.dataset.color));
+  });
+  picker.addEventListener('input', e => {
+    swatches.forEach(s => s.classList.remove('active'));
+    state.textColor = e.target.value;
+    renderPreview();
+  });
+})();
+
 // ===== Text area sync =====
 let _previewTimer;
 ['encounter', 'feature', 'appeal'].forEach(key => {
@@ -506,6 +569,35 @@ let _previewTimer;
     clearTimeout(_previewTimer);
     _previewTimer = setTimeout(renderPreview, 500);
   });
+});
+
+// ===== Terms of use =====
+const TERMS_VERSION = '1.0.0';
+
+let _termsResolve = null;
+
+function showTermsModal() {
+  return new Promise(resolve => {
+    _termsResolve = resolve;
+    $('#terms-modal').classList.remove('hidden');
+  });
+}
+
+$('#btn-agree-terms').addEventListener('click', () => {
+  fetch(`/agree?v=${TERMS_VERSION}&t=${Date.now()}`).catch(() => {});
+  $('#terms-modal').classList.add('hidden');
+  if (_termsResolve) { _termsResolve(true); _termsResolve = null; }
+});
+
+$('#btn-cancel-terms').addEventListener('click', () => {
+  $('#terms-modal').classList.add('hidden');
+  if (_termsResolve) { _termsResolve(false); _termsResolve = null; }
+});
+
+$('#terms-detail-link').addEventListener('click', e => {
+  e.preventDefault();
+  document.querySelector('.license-section details')?.setAttribute('open', '');
+  document.querySelector('.license-section')?.scrollIntoView({ behavior: 'smooth' });
 });
 
 // ===== Navigation =====
@@ -546,6 +638,8 @@ btnRestart.addEventListener('click', () => {
 
 // ===== Generate =====
 btnGenerate.addEventListener('click', async () => {
+  const agreed = await showTermsModal();
+  if (!agreed) return;
   btnGenerate.disabled = true;
   btnGenerate.innerHTML = '<span class="spinner"></span> 生成中...';
   try {

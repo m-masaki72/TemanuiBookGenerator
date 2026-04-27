@@ -115,6 +115,37 @@
       <div class="font-chips" id="font-chips"></div>
     </div>
 
+    <div class="font-selector-row">
+      <span class="font-selector-label">スタイル</span>
+      <button type="button" id="bold-toggle" class="style-btn active" title="太字">B</button>
+      <span class="font-selector-label" style="margin-left:12px">サイズ</span>
+      <div class="size-presets">
+        <button type="button" class="style-btn size-preset-btn" data-size="small" title="小">小</button>
+        <button type="button" class="style-btn size-preset-btn active" data-size="medium" title="中">中</button>
+        <button type="button" class="style-btn size-preset-btn" data-size="large" title="大">大</button>
+      </div>
+      <span class="font-selector-label" style="margin-left:12px">文字色</span>
+      <div class="color-swatches">
+        <button type="button" class="color-swatch active" data-color="#333333" style="background:#333333" title="ダークグレー"></button>
+        <button type="button" class="color-swatch" data-color="#000000" style="background:#000000" title="ブラック"></button>
+        <button type="button" class="color-swatch" data-color="#555555" style="background:#555555" title="グレー"></button>
+        <button type="button" class="color-swatch" data-color="#888888" style="background:#888888" title="ライトグレー"></button>
+        <button type="button" class="color-swatch" data-color="#1a3c6b" style="background:#1a3c6b" title="ネイビー"></button>
+        <button type="button" class="color-swatch" data-color="#4a7c8e" style="background:#4a7c8e" title="テール"></button>
+        <button type="button" class="color-swatch" data-color="#2e7d52" style="background:#2e7d52" title="グリーン"></button>
+        <button type="button" class="color-swatch" data-color="#5c8a3c" style="background:#5c8a3c" title="モスグリーン"></button>
+        <button type="button" class="color-swatch" data-color="#6b3f2a" style="background:#6b3f2a" title="ブラウン"></button>
+        <button type="button" class="color-swatch" data-color="#8b4513" style="background:#8b4513" title="サドルブラウン"></button>
+        <button type="button" class="color-swatch" data-color="#7b2d8b" style="background:#7b2d8b" title="パープル"></button>
+        <button type="button" class="color-swatch" data-color="#c0392b" style="background:#c0392b" title="レッド"></button>
+        <button type="button" class="color-swatch" data-color="#d4721a" style="background:#d4721a" title="オレンジ"></button>
+        <button type="button" class="color-swatch" data-color="#b5860d" style="background:#b5860d" title="ゴールド"></button>
+        <button type="button" class="color-swatch" data-color="#c0556b" style="background:#c0556b" title="ローズ"></button>
+        <button type="button" class="color-swatch" data-color="#2c6e8a" style="background:#2c6e8a" title="スカイブルー"></button>
+        <input type="color" id="text-color-picker" value="#333333" title="カスタムカラー" class="color-picker-input">
+      </div>
+    </div>
+
     <div class="text-grid">
       <div class="text-group">
         <label class="text-label"><span class="chip teal">🌙 出会った時期</span></label>
@@ -149,12 +180,47 @@
     </div>
   </div>
 
+  <!-- Terms modal -->
+  <div id="terms-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="terms-modal-title">
+    <div class="modal-box">
+      <h2 class="modal-title" id="terms-modal-title">生成前にご確認ください</h2>
+      <div class="modal-body">
+        <p>以下の投稿は本ジェネレーター・ハッシュタグでの使用を<strong>禁止</strong>します：</p>
+        <ul>
+          <li>ぬいぐるみの破損・損壊・虐待を想起させる表現</li>
+          <li>公序良俗に反する、または他者に強い不快感を与える内容</li>
+        </ul>
+        <p class="modal-note">悪質な利用が確認された場合、プラットフォームへの報告等の対応を行います。詳細は<a href="#" id="terms-detail-link">利用規約</a>をご確認ください。</p>
+      </div>
+      <div style="display:flex;gap:10px;margin-top:8px">
+        <button class="btn btn-secondary" id="btn-cancel-terms" style="flex:1">キャンセル</button>
+        <button class="btn btn-primary" id="btn-agree-terms" style="flex:2">同意して生成</button>
+      </div>
+    </div>
+  </div>
+
   <footer>
     <div class="tweet-embed">
       <blockquote class="twitter-tweet"><p lang="ja" dir="ltr">いろんなてまぬいが見られるタグ<br> <a href="https://twitter.com/hashtag/%E3%81%A6%E3%81%BE%E3%81%AC%E3%81%84%E5%9B%B3%E9%91%91?src=hash&amp;ref_src=twsrc%5Etfw">#てまぬい図鑑</a> を作りました！<br>テンプレートも作ったので良ければ使ってネ。もちろん写真を上げるだけでもOK👌🏻<br>みんなのてまぬい、見せてくれ…<a href="https://twitter.com/hashtag/%E5%88%9D%E6%98%9F%E5%AD%A6%E5%9C%92%E3%81%AC%E3%81%84%E3%81%AC%E3%81%84%E9%83%A8?src=hash&amp;ref_src=twsrc%5Etfw">#初星学園ぬいぬい部</a> <a href="https://t.co/2AX7X9STqk">pic.twitter.com/2AX7X9STqk</a></p>&mdash; めてを (@metewo_shooting) <a href="https://twitter.com/metewo_shooting/status/2047683117683708379?ref_src=twsrc%5Etfw">April 24, 2026</a></blockquote>
       <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
     </div>
     <p>Made with ❤️ for your beloved dolls</p>
+    <div class="license-section">
+      <details>
+        <summary>ご利用にあたってのお願い（利用規約）</summary>
+        <div class="license-detail">
+          <p>本ジェネレーターおよびハッシュタグは、『学園アイドルマスター』のぬいぐるみの魅力を共有する目的で作成されています。キャラクターやブランドのイメージを損なう行為は、コンテンツの価値を毀損し、関係各所に影響を及ぼす可能性があります。</p>
+          <p><strong>以下に該当する投稿は、理由の如何を問わず禁止とします：</strong></p>
+          <ul style="padding-left:1.4em;margin:.5em 0 1em">
+            <li>ぬいぐるみの破損、損壊、または虐待を想起させる表現を含むもの</li>
+            <li>公序良俗に反する、または他者に強い不快感を与える内容を含むもの</li>
+          </ul>
+          <p>また、上記に該当する画像を第三者への返信等で使用する行為もお控えください。</p>
+          <p>万が一、悪質な利用が確認された場合、プラットフォームへの報告等、状況に応じた対応を行います。節度あるご利用とご配慮をお願いいたします。</p>
+          <p style="font-size:.8rem;color:#888;margin-bottom:0">※ 本サービスへのアクセスログ（アクセス日時・IPアドレス等）は Cloudflare により自動的に記録されます。</p>
+        </div>
+      </details>
+    </div>
     <div class="license-section">
       <details>
         <summary>ライセンス・利用許諾</summary>
