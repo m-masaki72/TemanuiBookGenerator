@@ -190,7 +190,7 @@ async function drawTemplate(ctx, scale) {
   ctx.font = `bold ${s(11)}px sans-serif`;
   ctx.textAlign = 'right';
   ctx.textBaseline = 'top';
-  ctx.fillText('temanuibookgenerator.pages.dev', s(CANVAS_W) - s(12), s(12));
+  ctx.fillText('temanui.morilab-garage.com', s(CANVAS_W) - s(12), s(12));
   ctx.restore();
 }
 

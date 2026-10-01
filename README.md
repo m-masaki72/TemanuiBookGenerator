@@ -2,7 +2,7 @@
 
 大切なてまぬいの紹介カードを作れるWebアプリ。写真をアップロードするだけで、てまぬい図鑑カードが完成！
 
-**デモ: https://temanuibookgenerator.pages.dev/**
+**デモ: https://temanui.morilab-garage.com/**
 
 ![template](template.jpg)
 
