@@ -41,3 +41,8 @@ Cloudflare Pages にリポジトリルストをそのまま push するだけ。
 ## ライセンス
 
 テンプレート画像の著作権は @metewo_shooting に帰属します。
+
+## 紹介ページ
+
+- [制作物ページ（Mori Lab）](https://morilab-garage.com/projects/temanui-book-generator/)
+- [開発ブログ記事（はてなブログ）](https://mementomori7272.hatenablog.com/entry/2026/04/27/004251)
